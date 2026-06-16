@@ -3,69 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Spandan monitors website reachability from your browser with live uptime stats, charts, and an activity log.">
-  <meta name="theme-color" content="#6366f1">
+  <meta name="description" content="Spandan monitors website reachability from your browser with live heartbeat visualization, latency charts, and uptime tracking.">
+  <meta name="theme-color" content="#0c0c0f">
   <meta property="og:title" content="Spandan · Site Reachability Monitor">
-  <meta property="og:description" content="Monitor website reachability in real time from your browser.">
+  <meta property="og:description" content="Watch your site's pulse in real time from your browser.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://invesh-io.github.io/spandan/">
   <title>Spandan · Site Reachability Monitor</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/variables.css">
-  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="topbar-inner">
+  <div class="app">
+    <header class="topbar shell reveal">
+      <div class="topbar-row">
         <a class="brand" href="./" aria-label="Spandan home">
-          <img class="brand-icon" src="assets/favicon.svg" width="36" height="36" alt="">
-          <div class="brand-copy">
+          <img class="brand-mark" src="assets/favicon.svg" width="44" height="44" alt="">
+          <div class="brand-text">
             <span class="brand-name">Spandan</span>
-            <span class="brand-tag">Reachability monitor</span>
+            <span class="brand-sub">Site reachability monitor</span>
           </div>
         </a>
-        <a class="topbar-link" href="https://github.com/invesh-io/spandan" rel="noopener noreferrer">GitHub</a>
+        <div class="topbar-actions">
+          <a class="chip-link" href="https://github.com/invesh-io/spandan" rel="noopener noreferrer">GitHub</a>
+        </div>
       </div>
     </header>
 
-    <main class="page">
-      <section class="hero-panel" aria-live="polite">
-        <div class="hero-status">
-          <div class="status-badge" id="statusBadge" data-state="idle">
-            <span class="status-ring" id="statusPulse" aria-hidden="true"></span>
-            <span class="status-copy">
-              <span class="status-label">Current status</span>
-              <span class="status-value" id="statusText">Idle</span>
-            </span>
-          </div>
-          <div class="hero-metric">
-            <span class="metric-label">Uptime</span>
-            <span class="metric-value" id="uptime">100.0%</span>
-          </div>
-        </div>
+    <main class="main shell">
+      <section class="stage reveal reveal-delay-1" id="stage" data-state="idle" aria-live="polite">
+        <div class="stage-grid">
+          <div class="stage-visual">
+            <div class="host-block">
+              <span class="host-label">Monitoring target</span>
+              <span class="host-name" id="hostName">—</span>
+              <span class="host-url" id="hostUrl">Enter a URL below to begin</span>
+            </div>
 
-        <div class="metric-row">
-          <div class="metric-chip">
-            <span class="metric-chip-label">Checks</span>
-            <span class="metric-chip-value" id="totalPings">0</span>
+            <div class="ecg-wrap" aria-hidden="true">
+              <div class="ecg-grid"></div>
+              <canvas id="ecgCanvas"></canvas>
+            </div>
           </div>
-          <div class="metric-chip metric-chip-success">
-            <span class="metric-chip-label">Passed</span>
-            <span class="metric-chip-value" id="successCount">0</span>
-          </div>
-          <div class="metric-chip metric-chip-danger">
-            <span class="metric-chip-label">Failed</span>
-            <span class="metric-chip-value" id="failureCount">0</span>
+
+          <div class="stage-meta">
+            <div>
+              <div class="status-headline">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-word" id="statusText">Ready</span>
+              </div>
+              <div class="session-line" id="sessionLine">
+                <span>Press <strong>Start</strong> to begin monitoring</span>
+              </div>
+            </div>
+
+            <div class="ring-wrap">
+              <svg class="ring-svg" viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+                <circle
+                  class="ring-progress"
+                  id="uptimeRing"
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  stroke-dasharray="263.89"
+                  stroke-dashoffset="0"
+                ></circle>
+              </svg>
+              <div>
+                <div class="metric-card-label">Uptime</div>
+                <div class="metric-card-value" id="uptime">100.0%</div>
+              </div>
+            </div>
+
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-card-label">Checks</div>
+                <div class="metric-card-value" id="totalPings">0</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card-label">Avg latency</div>
+                <div class="metric-card-value" id="avgLatency">—</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card-label">Passed</div>
+                <div class="metric-card-value metric-value-success" id="successCount">0</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card-label">Failed</div>
+                <div class="metric-card-value metric-value-danger" id="failureCount">0</div>
+              </div>
+              <div class="metric-card metric-card-wide">
+                <div class="metric-card-label">Recent checks</div>
+                <div class="timeline-strip" id="timelineStrip" aria-label="Recent check results"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="panel">
-        <form class="control-bar" id="monitorForm" onsubmit="return false;">
-          <div class="url-field">
+      <section class="command-deck reveal reveal-delay-2">
+        <form class="command-row" id="monitorForm" onsubmit="return false;">
+          <div class="url-shell">
             <label class="sr-only" for="urlInput">Website URL</label>
-            <span class="url-prefix" aria-hidden="true">URL</span>
             <input
               id="urlInput"
               name="url"
@@ -76,9 +123,26 @@
               required
             >
           </div>
+          <div class="command-side">
+            <div class="command-actions">
+              <button class="btn btn-primary" id="startBtn" type="button" aria-pressed="false">
+                Start monitoring
+              </button>
+              <button class="btn btn-ghost" id="resetBtn" type="button">
+                Reset
+              </button>
+            </div>
+          </div>
+        </form>
 
-          <div class="interval-field">
-            <label for="intervalInput">Every</label>
+        <div class="interval-row">
+          <span class="interval-label">Interval</span>
+          <button class="preset-btn is-active" type="button" data-interval="5">5s</button>
+          <button class="preset-btn" type="button" data-interval="10">10s</button>
+          <button class="preset-btn" type="button" data-interval="30">30s</button>
+          <button class="preset-btn" type="button" data-interval="60">60s</button>
+          <label class="interval-custom">
+            Custom
             <input
               id="intervalInput"
               name="interval"
@@ -89,46 +153,54 @@
               value="5"
               required
             >
-            <span>sec</span>
-          </div>
+            s
+          </label>
+        </div>
 
-          <div class="control-actions">
-            <button class="btn btn-primary" id="startBtn" type="button" aria-pressed="false">
-              Start
-            </button>
-            <button class="btn btn-ghost" id="resetBtn" type="button">
-              Reset
-            </button>
-          </div>
-        </form>
         <p class="field-error" id="urlError" aria-live="polite"></p>
-        <p class="panel-note">Checks run in your browser. Cross-origin restrictions may hide HTTP status codes for some sites.</p>
+        <p class="hint-line">
+          Checks run locally in your browser. Some sites hide HTTP status due to cross-origin rules.
+          Shortcut: <kbd>⌘</kbd> + <kbd>Enter</kbd>
+        </p>
       </section>
 
-      <div class="dashboard-grid">
-        <section class="panel panel-chart" aria-labelledby="chart-title">
+      <div class="dashboard reveal reveal-delay-3">
+        <section class="panel" aria-labelledby="latency-title">
           <div class="panel-head">
-            <h2 id="chart-title">Timeline</h2>
-            <span class="panel-meta">Last 50 checks</span>
+            <h2 id="latency-title">Response time</h2>
+            <span class="panel-meta">Milliseconds</span>
           </div>
-          <div class="chart-wrap">
-            <canvas id="pingChart" aria-label="Reachability history chart"></canvas>
+          <div class="chart-box">
+            <canvas id="latencyChart" aria-label="Response time chart"></canvas>
           </div>
         </section>
 
-        <section class="panel panel-log" aria-labelledby="log-title">
+        <section class="panel" aria-labelledby="uptime-title">
           <div class="panel-head">
-            <h2 id="log-title">Activity</h2>
-            <span class="panel-meta">Newest first</span>
+            <h2 id="uptime-title">Availability</h2>
+            <span class="panel-meta">Last 50 checks</span>
           </div>
-          <div class="log-panel" id="logContainer">
-            <p class="log-empty">No checks yet. Hit Start to begin monitoring.</p>
+          <div class="chart-box">
+            <canvas id="uptimeChart" aria-label="Availability chart"></canvas>
           </div>
         </section>
       </div>
+
+      <section class="panel reveal reveal-delay-3" style="margin-top: 1rem; min-height: auto;" aria-labelledby="log-title">
+        <div class="panel-head">
+          <h2 id="log-title">Activity feed</h2>
+          <span class="panel-meta">Live log</span>
+        </div>
+        <div class="log-feed" id="logContainer">
+          <div class="log-empty">
+            <span class="log-empty-icon">∿</span>
+            <span>No checks yet. Start monitoring to see live results.</span>
+          </div>
+        </div>
+      </section>
     </main>
 
-    <footer class="site-footer">
+    <footer class="footer shell">
       <p>Open source · <a href="https://github.com/invesh-io/spandan" rel="noopener noreferrer">invesh-io/spandan</a></p>
     </footer>
   </div>

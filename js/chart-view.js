@@ -1,78 +1,80 @@
 import { CONFIG } from "./config.js";
 
-export function createChart(canvas, pingData) {
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: {
+    intersect: false,
+    mode: "index",
+  },
+  plugins: {
+    legend: { display: false },
+  },
+};
+
+export function createUptimeChart(canvas, pingData) {
   return new Chart(canvas, {
     type: "line",
     data: {
       labels: [],
       datasets: [
         {
-          label: "Reachability",
+          label: "Availability",
           data: [],
           borderWidth: 2,
           fill: true,
           stepped: true,
-          pointRadius: 3,
-          pointHoverRadius: 5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
           backgroundColor: (context) => {
             const value = context.dataset.data[context.dataIndex];
             return value === 1
-              ? "rgba(22, 163, 74, 0.14)"
-              : "rgba(220, 38, 38, 0.12)";
+              ? "rgba(52, 211, 153, 0.16)"
+              : "rgba(251, 113, 133, 0.14)";
           },
           borderColor: (context) => {
             const value = context.dataset.data[context.dataIndex];
-            return value === 1 ? "#16a34a" : "#dc2626";
+            return value === 1 ? "#34d399" : "#fb7185";
           },
         },
       ],
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        intersect: false,
-        mode: "index",
-      },
+      ...chartDefaults,
       scales: {
         y: {
           beginAtZero: true,
           max: 1,
           ticks: {
             stepSize: 1,
-            callback: (value) => (value === 1 ? "Online" : "Offline"),
+            color: "#71717a",
+            callback: (value) => (value === 1 ? "Up" : "Down"),
           },
-          grid: {
-            color: "rgba(148, 163, 184, 0.2)",
-          },
+          grid: { color: "rgba(255,255,255,0.05)" },
         },
         x: {
           ticks: {
+            color: "#71717a",
             maxRotation: 0,
             autoSkip: true,
-            maxTicksLimit: 8,
+            maxTicksLimit: 6,
           },
-          grid: {
-            display: false,
-          },
+          grid: { display: false },
         },
       },
       plugins: {
-        legend: {
-          display: false,
-        },
+        ...chartDefaults.plugins,
         tooltip: {
+          backgroundColor: "#18181b",
+          borderColor: "rgba(255,255,255,0.08)",
+          borderWidth: 1,
+          titleColor: "#f4f4f5",
+          bodyColor: "#a1a1aa",
           callbacks: {
             label(context) {
               const status = context.parsed.y === 1 ? "Online" : "Offline";
               const meta = pingData.details[context.dataIndex];
-              const responseTime = pingData.responseTimes[context.dataIndex];
-              if (meta) {
-                return `${status} · ${meta}`;
-              }
-              return responseTime
-                ? `${status} · ${responseTime}ms`
-                : status;
+              return meta ? `${status} · ${meta}` : status;
             },
           },
         },
@@ -81,23 +83,98 @@ export function createChart(canvas, pingData) {
   });
 }
 
-export function updateChart(chart, pingData) {
-  if (pingData.timestamps.length > CONFIG.maxChartPoints) {
-    pingData.timestamps.shift();
-    pingData.statuses.shift();
-    pingData.responseTimes.shift();
-    pingData.details.shift();
-  }
+export function createLatencyChart(canvas, pingData) {
+  return new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "Latency",
+          data: [],
+          borderWidth: 2,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderColor: "#a78bfa",
+          backgroundColor: "rgba(167, 139, 250, 0.12)",
+        },
+      ],
+    },
+    options: {
+      ...chartDefaults,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: "#71717a",
+            callback: (value) => `${value}ms`,
+          },
+          grid: { color: "rgba(255,255,255,0.05)" },
+        },
+        x: {
+          ticks: {
+            color: "#71717a",
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 6,
+          },
+          grid: { display: false },
+        },
+      },
+      plugins: {
+        ...chartDefaults.plugins,
+        tooltip: {
+          backgroundColor: "#18181b",
+          borderColor: "rgba(255,255,255,0.08)",
+          borderWidth: 1,
+          titleColor: "#f4f4f5",
+          bodyColor: "#a1a1aa",
+          callbacks: {
+            label(context) {
+              return `${context.parsed.y}ms`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
 
-  chart.data.labels = pingData.timestamps.map((timestamp) =>
+function formatLabels(timestamps) {
+  return timestamps.map((timestamp) =>
     timestamp.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
     }),
   );
-  chart.data.datasets[0].data = pingData.statuses;
-  chart.update("none");
+}
+
+function trimData(pingData) {
+  if (pingData.timestamps.length <= CONFIG.maxChartPoints) {
+    return;
+  }
+  pingData.timestamps.shift();
+  pingData.statuses.shift();
+  pingData.responseTimes.shift();
+  pingData.details.shift();
+}
+
+export function updateCharts(uptimeChart, latencyChart, pingData) {
+  trimData(pingData);
+
+  const labels = formatLabels(pingData.timestamps);
+  uptimeChart.data.labels = labels;
+  uptimeChart.data.datasets[0].data = pingData.statuses;
+  uptimeChart.update("none");
+
+  latencyChart.data.labels = labels;
+  latencyChart.data.datasets[0].data = pingData.responseTimes.map(
+    (value, index) => (pingData.statuses[index] === 1 ? value : null),
+  );
+  latencyChart.update("none");
 }
 
 export function resetChartData(pingData) {
@@ -105,4 +182,13 @@ export function resetChartData(pingData) {
   pingData.statuses.length = 0;
   pingData.responseTimes.length = 0;
   pingData.details.length = 0;
+}
+
+export function clearCharts(uptimeChart, latencyChart) {
+  uptimeChart.data.labels = [];
+  uptimeChart.data.datasets[0].data = [];
+  latencyChart.data.labels = [];
+  latencyChart.data.datasets[0].data = [];
+  uptimeChart.update("none");
+  latencyChart.update("none");
 }
