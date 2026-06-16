@@ -1,210 +1,555 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Spandan monitors website reachability from your browser with live heartbeat visualization, latency charts, and uptime tracking.">
-  <meta name="theme-color" content="#0c0c0f">
-  <meta property="og:title" content="Spandan · Site Reachability Monitor">
-  <meta property="og:description" content="Watch your site's pulse in real time from your browser.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://invesh-io.github.io/spandan/">
-  <title>Spandan · Site Reachability Monitor</title>
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/variables.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/animations.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Ping Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .input-group input {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            align-self: flex-end;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .status-online {
+            color: #10b981;
+        }
+
+        .status-offline {
+            color: #ef4444;
+        }
+
+        .status-neutral {
+            color: #6b7280;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .log-entry {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+        }
+
+        .log-failure {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+        }
+
+        .log-time {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .pulse {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .pulse-online {
+            background: #10b981;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+
+        .pulse-offline {
+            background: #ef4444;
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="app">
-    <header class="topbar shell reveal">
-      <div class="topbar-row">
-        <a class="brand" href="./" aria-label="Spandan home">
-          <img class="brand-mark" src="assets/favicon.svg" width="44" height="44" alt="">
-          <div class="brand-text">
-            <span class="brand-name">Spandan</span>
-            <span class="brand-sub">Site reachability monitor</span>
-          </div>
-        </a>
-        <div class="topbar-actions">
-          <a class="chip-link" href="https://github.com/invesh-io/spandan" rel="noopener noreferrer">GitHub</a>
-        </div>
-      </div>
-    </header>
-
-    <main class="main shell">
-      <section class="stage reveal reveal-delay-1" id="stage" data-state="idle" aria-live="polite">
-        <div class="stage-grid">
-          <div class="stage-visual">
-            <div class="host-block">
-              <span class="host-label">Monitoring target</span>
-              <span class="host-name" id="hostName">—</span>
-              <span class="host-url" id="hostUrl">Enter a URL below to begin</span>
-            </div>
-
-            <div class="ecg-wrap" aria-hidden="true">
-              <div class="ecg-grid"></div>
-              <canvas id="ecgCanvas"></canvas>
-            </div>
-          </div>
-
-          <div class="stage-meta">
-            <div>
-              <div class="status-headline">
-                <span class="status-dot" id="statusDot"></span>
-                <span class="status-word" id="statusText">Ready</span>
-              </div>
-              <div class="session-line" id="sessionLine">
-                <span>Press <strong>Start</strong> to begin monitoring</span>
-              </div>
-            </div>
-
-            <div class="ring-wrap">
-              <svg class="ring-svg" viewBox="0 0 100 100" aria-hidden="true">
-                <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
-                <circle
-                  class="ring-progress"
-                  id="uptimeRing"
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke-dasharray="263.89"
-                  stroke-dashoffset="0"
-                ></circle>
-              </svg>
-              <div>
-                <div class="metric-card-label">Uptime</div>
-                <div class="metric-card-value" id="uptime">100.0%</div>
-              </div>
-            </div>
-
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <div class="metric-card-label">Checks</div>
-                <div class="metric-card-value" id="totalPings">0</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-card-label">Avg latency</div>
-                <div class="metric-card-value" id="avgLatency">—</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-card-label">Passed</div>
-                <div class="metric-card-value metric-value-success" id="successCount">0</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-card-label">Failed</div>
-                <div class="metric-card-value metric-value-danger" id="failureCount">0</div>
-              </div>
-              <div class="metric-card metric-card-wide">
-                <div class="metric-card-label">Recent checks</div>
-                <div class="timeline-strip" id="timelineStrip" aria-label="Recent check results"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="command-deck reveal reveal-delay-2">
-        <form class="command-row" id="monitorForm" onsubmit="return false;">
-          <div class="url-shell">
-            <label class="sr-only" for="urlInput">Website URL</label>
-            <input
-              id="urlInput"
-              name="url"
-              type="url"
-              inputmode="url"
-              autocomplete="url"
-              placeholder="https://one.one.one.one/"
-              required
-            >
-          </div>
-          <div class="command-side">
-            <div class="command-actions">
-              <button class="btn btn-primary" id="startBtn" type="button" aria-pressed="false">
-                Start monitoring
-              </button>
-              <button class="btn btn-ghost" id="resetBtn" type="button">
-                Reset
-              </button>
-            </div>
-          </div>
-        </form>
-
-        <div class="interval-row">
-          <span class="interval-label">Interval</span>
-          <button class="preset-btn is-active" type="button" data-interval="5">5s</button>
-          <button class="preset-btn" type="button" data-interval="10">10s</button>
-          <button class="preset-btn" type="button" data-interval="30">30s</button>
-          <button class="preset-btn" type="button" data-interval="60">60s</button>
-          <label class="interval-custom">
-            Custom
-            <input
-              id="intervalInput"
-              name="interval"
-              type="number"
-              min="1"
-              max="300"
-              step="1"
-              value="5"
-              required
-            >
-            s
-          </label>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 Website Ping Monitor</h1>
+            <p>Real-time monitoring and downtime visualization</p>
         </div>
 
-        <p class="field-error" id="urlError" aria-live="polite"></p>
-        <p class="hint-line">
-          Checks run locally in your browser. Some sites hide HTTP status due to cross-origin rules.
-          Shortcut: <kbd>⌘</kbd> + <kbd>Enter</kbd>
-        </p>
-      </section>
+        <div class="card">
+            <div class="controls">
+                <div class="input-group">
+                    <label for="urlInput">Website URL</label>
+                    <input type="url" id="urlInput" placeholder="https://example.com" value="https://httpbin.org">
+                </div>
+                <div class="input-group">
+                    <label for="intervalInput">Ping Interval (seconds)</label>
+                    <input type="number" id="intervalInput" min="1" max="300" value="5">
+                </div>
+                <button class="btn btn-primary" id="startBtn">Start Monitoring</button>
+            </div>
 
-      <div class="dashboard reveal reveal-delay-3">
-        <section class="panel" aria-labelledby="latency-title">
-          <div class="panel-head">
-            <h2 id="latency-title">Response time</h2>
-            <span class="panel-meta">Milliseconds</span>
-          </div>
-          <div class="chart-box">
-            <canvas id="latencyChart" aria-label="Response time chart"></canvas>
-          </div>
-        </section>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-label">Status</div>
+                    <div class="status-value status-neutral" id="currentStatus">
+                        <span class="pulse pulse-online" id="statusPulse" style="display:none;"></span>
+                        Not Started
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Total Pings</div>
+                    <div class="status-value status-neutral" id="totalPings">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Successful</div>
+                    <div class="status-value status-online" id="successCount">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Failed</div>
+                    <div class="status-value status-offline" id="failureCount">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Uptime</div>
+                    <div class="status-value status-neutral" id="uptime">100%</div>
+                </div>
+            </div>
 
-        <section class="panel" aria-labelledby="uptime-title">
-          <div class="panel-head">
-            <h2 id="uptime-title">Availability</h2>
-            <span class="panel-meta">Last 50 checks</span>
-          </div>
-          <div class="chart-box">
-            <canvas id="uptimeChart" aria-label="Availability chart"></canvas>
-          </div>
-        </section>
-      </div>
-
-      <section class="panel reveal reveal-delay-3" style="margin-top: 1rem; min-height: auto;" aria-labelledby="log-title">
-        <div class="panel-head">
-          <h2 id="log-title">Activity feed</h2>
-          <span class="panel-meta">Live log</span>
+            <div class="chart-container">
+                <canvas id="pingChart"></canvas>
+            </div>
         </div>
-        <div class="log-feed" id="logContainer">
-          <div class="log-empty">
-            <span class="log-empty-icon">∿</span>
-            <span>No checks yet. Start monitoring to see live results.</span>
-          </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px; color: #333;">Activity Log</h2>
+            <div class="log-container" id="logContainer">
+                <p style="text-align: center; color: #999;">No activity yet. Start monitoring to see logs.</p>
+            </div>
         </div>
-      </section>
-    </main>
+    </div>
 
-    <footer class="footer shell">
-      <p>Open source · <a href="https://github.com/invesh-io/spandan" rel="noopener noreferrer">invesh-io/spandan</a></p>
-    </footer>
-  </div>
+    <script>
+        let monitoringInterval = null;
+        let isMonitoring = false;
+        let pingData = {
+            timestamps: [],
+            statuses: [],
+            responseTimes: []
+        };
+        let stats = {
+            total: 0,
+            success: 0,
+            failure: 0
+        };
 
-  <script type="module" src="js/app.js"></script>
+        let urlInput, intervalInput, startBtn, currentStatus, statusPulse;
+        let totalPings, successCount, failureCount, uptime, logContainer;
+        let chart;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            urlInput = document.getElementById('urlInput');
+            intervalInput = document.getElementById('intervalInput');
+            startBtn = document.getElementById('startBtn');
+            currentStatus = document.getElementById('currentStatus');
+            statusPulse = document.getElementById('statusPulse');
+            totalPings = document.getElementById('totalPings');
+            successCount = document.getElementById('successCount');
+            failureCount = document.getElementById('failureCount');
+            uptime = document.getElementById('uptime');
+            logContainer = document.getElementById('logContainer');
+
+            const ctx = document.getElementById('pingChart').getContext('2d');
+            chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Ping Status (1=Online, 0=Offline)',
+                    data: [],
+                    backgroundColor: (context) => {
+                        if (!context.parsed) return 'rgba(16, 185, 129, 0.2)';
+                        const value = context.parsed.y;
+                        return value === 1 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+                    },
+                    borderColor: (context) => {
+                        if (!context.parsed) return 'rgb(16, 185, 129)';
+                        const value = context.parsed.y;
+                        return value === 1 ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)';
+                    },
+                    borderWidth: 2,
+                    fill: true,
+                    stepped: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                return value === 1 ? 'Online' : 'Offline';
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const status = context.parsed.y === 1 ? 'Online' : 'Offline';
+                                const responseTime = pingData.responseTimes[context.dataIndex];
+                                return responseTime ? 
+                                    `${status} (${responseTime}ms)` : 
+                                    status;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+            startBtn.addEventListener('click', toggleMonitoring);
+        });
+
+        function toggleMonitoring() {
+            if (isMonitoring) {
+                stopMonitoring();
+            } else {
+                startMonitoring();
+            }
+        }
+
+        function startMonitoring() {
+            const url = urlInput.value.trim();
+            const interval = parseInt(intervalInput.value) * 1000;
+
+            if (!url) {
+                alert('Please enter a valid URL');
+                return;
+            }
+
+            isMonitoring = true;
+            startBtn.textContent = 'Stop Monitoring';
+            startBtn.classList.remove('btn-primary');
+            startBtn.classList.add('btn-danger');
+            urlInput.disabled = true;
+            intervalInput.disabled = true;
+
+            performPing();
+            monitoringInterval = setInterval(performPing, interval);
+        }
+
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+            }
+            isMonitoring = false;
+            startBtn.textContent = 'Start Monitoring';
+            startBtn.classList.remove('btn-danger');
+            startBtn.classList.add('btn-primary');
+            urlInput.disabled = false;
+            intervalInput.disabled = false;
+        }
+
+        async function performPing() {
+            const url = urlInput.value.trim();
+            const startTime = Date.now();
+            let success = false;
+            let responseTime = 0;
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                const response = await fetch(url, {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    signal: controller.signal,
+                    cache: 'no-cache'
+                });
+
+                clearTimeout(timeoutId);
+                responseTime = Date.now() - startTime;
+                success = true;
+            } catch (error) {
+                responseTime = Date.now() - startTime;
+                success = false;
+            }
+
+            updateStats(success);
+            updateChart(success, responseTime);
+            updateUI(success, responseTime);
+            addLogEntry(success, responseTime);
+        }
+
+        function updateStats(success) {
+            stats.total++;
+            if (success) {
+                stats.success++;
+            } else {
+                stats.failure++;
+            }
+
+            totalPings.textContent = stats.total;
+            successCount.textContent = stats.success;
+            failureCount.textContent = stats.failure;
+
+            const uptimePercentage = stats.total > 0 ? 
+                ((stats.success / stats.total) * 100).toFixed(2) : 
+                100;
+            uptime.textContent = `${uptimePercentage}%`;
+        }
+
+        function updateChart(success, responseTime) {
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString();
+
+            pingData.timestamps.push(now);
+            pingData.statuses.push(success ? 1 : 0);
+            pingData.responseTimes.push(responseTime);
+
+            if (pingData.timestamps.length > 50) {
+                pingData.timestamps.shift();
+                pingData.statuses.shift();
+                pingData.responseTimes.shift();
+            }
+
+            chart.data.labels = pingData.timestamps.map(ts => ts.toLocaleTimeString());
+            chart.data.datasets[0].data = pingData.statuses;
+            chart.update('none');
+        }
+
+        function updateUI(success, responseTime) {
+            statusPulse.style.display = 'inline-block';
+
+            if (success) {
+                currentStatus.innerHTML = '<span class="pulse pulse-online" id="statusPulse"></span>Online';
+                currentStatus.className = 'status-value status-online';
+                statusPulse.className = 'pulse pulse-online';
+            } else {
+                currentStatus.innerHTML = '<span class="pulse pulse-offline" id="statusPulse"></span>Offline';
+                currentStatus.className = 'status-value status-offline';
+                statusPulse.className = 'pulse pulse-offline';
+            }
+        }
+
+        function addLogEntry(success, responseTime) {
+            const logEntry = document.createElement('div');
+            logEntry.className = success ? 'log-entry log-success' : 'log-entry log-failure';
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+            const status = success ? '✓ Ping successful' : '✗ Ping failed';
+            const details = success ? `Response time: ${responseTime}ms` : `Timeout after ${responseTime}ms`;
+
+            logEntry.innerHTML = `
+                <div>
+                    <strong>${status}</strong><br>
+                    <small>${details}</small>
+                </div>
+                <div class="log-time">${timeStr}</div>
+            `;
+
+            if (logContainer.children[0]?.tagName === 'P') {
+                logContainer.innerHTML = '';
+            }
+
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+
+            if (logContainer.children.length > 100) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+    </script>
 </body>
 </html>
+
