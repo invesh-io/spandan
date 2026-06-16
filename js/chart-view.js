@@ -17,12 +17,12 @@ export function createChart(canvas, pingData) {
           backgroundColor: (context) => {
             const value = context.dataset.data[context.dataIndex];
             return value === 1
-              ? "rgba(5, 150, 105, 0.18)"
-              : "rgba(220, 38, 38, 0.18)";
+              ? "rgba(22, 163, 74, 0.14)"
+              : "rgba(220, 38, 38, 0.12)";
           },
           borderColor: (context) => {
             const value = context.dataset.data[context.dataIndex];
-            return value === 1 ? "#059669" : "#dc2626";
+            return value === 1 ? "#16a34a" : "#dc2626";
           },
         },
       ],
@@ -43,7 +43,7 @@ export function createChart(canvas, pingData) {
             callback: (value) => (value === 1 ? "Online" : "Offline"),
           },
           grid: {
-            color: "rgba(148, 163, 184, 0.25)",
+            color: "rgba(148, 163, 184, 0.2)",
           },
         },
         x: {

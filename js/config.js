@@ -1,12 +1,12 @@
 export const CONFIG = {
-  defaultUrl: "https://httpbin.org/status/200",
+  defaultUrl: "https://one.one.one.one/",
   defaultIntervalSec: 5,
   minIntervalSec: 1,
   maxIntervalSec: 300,
   requestTimeoutMs: 10000,
   maxChartPoints: 50,
   maxLogEntries: 100,
-  storageKey: "spandan.settings.v1",
+  storageKey: "spandan.settings.v2",
 };
 
 export const CHART_CDN =

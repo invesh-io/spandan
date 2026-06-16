@@ -7,7 +7,7 @@ export function bindElements() {
     urlError: document.getElementById("urlError"),
     startBtn: document.getElementById("startBtn"),
     resetBtn: document.getElementById("resetBtn"),
-    currentStatus: document.getElementById("currentStatus"),
+    statusBadge: document.getElementById("statusBadge"),
     statusPulse: document.getElementById("statusPulse"),
     statusText: document.getElementById("statusText"),
     totalPings: document.getElementById("totalPings"),
@@ -23,9 +23,9 @@ export function setFieldError(element, message) {
 }
 
 export function setMonitoringState(elements, isMonitoring) {
-  elements.startBtn.textContent = isMonitoring ? "Stop" : "Start monitoring";
-  elements.startBtn.classList.toggle("button-primary", !isMonitoring);
-  elements.startBtn.classList.toggle("button-danger", isMonitoring);
+  elements.startBtn.textContent = isMonitoring ? "Stop" : "Start";
+  elements.startBtn.classList.toggle("btn-primary", !isMonitoring);
+  elements.startBtn.classList.toggle("btn-danger", isMonitoring);
   elements.startBtn.setAttribute("aria-pressed", String(isMonitoring));
   elements.urlInput.disabled = isMonitoring;
   elements.intervalInput.disabled = isMonitoring;
@@ -46,22 +46,12 @@ export function updateStats(elements, stats) {
 }
 
 export function updateStatus(elements, success) {
-  elements.statusPulse.className = "pulse-dot";
-  elements.statusPulse.classList.add(
-    success ? "pulse-dot-online" : "pulse-dot-offline",
-  );
-
-  elements.currentStatus.className = "stat-value status-line";
-  elements.currentStatus.classList.add(
-    success ? "stat-value-success" : "stat-value-danger",
-  );
+  elements.statusBadge.dataset.state = success ? "online" : "offline";
   elements.statusText.textContent = success ? "Online" : "Offline";
 }
 
 export function setIdleStatus(elements) {
-  elements.statusPulse.className = "pulse-dot pulse-dot-idle";
-  elements.currentStatus.className =
-    "stat-value stat-value-neutral status-line";
+  elements.statusBadge.dataset.state = "idle";
   elements.statusText.textContent = "Idle";
 }
 
@@ -76,10 +66,16 @@ export function addLogEntry(elements, result) {
     result.success ? "log-entry-success" : "log-entry-failure"
   }`;
 
+  const indicator = document.createElement("span");
+  indicator.className = "log-indicator";
+  indicator.setAttribute("aria-hidden", "true");
+
   const body = document.createElement("div");
+  body.className = "log-body";
+
   const title = document.createElement("div");
   title.className = "log-title";
-  title.textContent = result.success ? "Check passed" : "Check failed";
+  title.textContent = result.success ? "Passed" : "Failed";
 
   const detail = document.createElement("div");
   detail.className = "log-detail";
@@ -95,7 +91,7 @@ export function addLogEntry(elements, result) {
   });
 
   body.append(title, detail);
-  entry.append(body, time);
+  entry.append(indicator, body, time);
   elements.logContainer.prepend(entry);
 
   while (elements.logContainer.children.length > CONFIG.maxLogEntries) {
@@ -105,5 +101,5 @@ export function addLogEntry(elements, result) {
 
 export function clearLog(elements) {
   elements.logContainer.innerHTML =
-    '<p class="log-empty">No activity yet. Start monitoring to see checks here.</p>';
+    '<p class="log-empty">No checks yet. Hit Start to begin monitoring.</p>';
 }

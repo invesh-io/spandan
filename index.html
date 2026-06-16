@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Spandan monitors website reachability from your browser with live uptime stats, charts, and an activity log.">
-  <meta name="theme-color" content="#0f766e">
+  <meta name="theme-color" content="#6366f1">
   <meta property="og:title" content="Spandan · Site Reachability Monitor">
   <meta property="og:description" content="Monitor website reachability in real time from your browser.">
   <meta property="og:type" content="website">
@@ -15,107 +15,123 @@
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-  <main class="page">
-    <header class="site-header">
-      <div class="brand">
-        <img class="brand-mark" src="assets/favicon.svg" width="40" height="40" alt="">
-        <h1>Spandan</h1>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="./" aria-label="Spandan home">
+          <img class="brand-icon" src="assets/favicon.svg" width="36" height="36" alt="">
+          <div class="brand-copy">
+            <span class="brand-name">Spandan</span>
+            <span class="brand-tag">Reachability monitor</span>
+          </div>
+        </a>
+        <a class="topbar-link" href="https://github.com/invesh-io/spandan" rel="noopener noreferrer">GitHub</a>
       </div>
-      <p>Monitor website reachability from your browser with live stats, charts, and a detailed activity log.</p>
     </header>
 
-    <section class="card" aria-labelledby="monitor-title">
-      <h2 class="card-title" id="monitor-title">Monitor</h2>
-
-      <div class="notice" role="note">
-        Checks run in your browser. Sites that block cross-origin requests may only report network reachability, not HTTP status codes.
-      </div>
-
-      <form class="controls" id="monitorForm" onsubmit="return false;">
-        <div class="field">
-          <label for="urlInput">Website URL</label>
-          <input
-            id="urlInput"
-            name="url"
-            type="url"
-            inputmode="url"
-            autocomplete="url"
-            placeholder="https://example.com"
-            required
-          >
-          <p class="field-error" id="urlError" aria-live="polite"></p>
-        </div>
-
-        <div class="field">
-          <label for="intervalInput">Interval (seconds)</label>
-          <input
-            id="intervalInput"
-            name="interval"
-            type="number"
-            min="1"
-            max="300"
-            step="1"
-            value="5"
-            required
-          >
-        </div>
-
-        <button class="button button-primary" id="startBtn" type="button" aria-pressed="false">
-          Start monitoring
-        </button>
-      </form>
-
-      <div class="toolbar">
-        <button class="button button-secondary" id="resetBtn" type="button">
-          Reset session
-        </button>
-      </div>
-
-      <div class="stats" aria-live="polite">
-        <div class="stat">
-          <div class="stat-label">Status</div>
-          <div class="stat-value stat-value-neutral status-line" id="currentStatus">
-            <span class="pulse-dot pulse-dot-idle" id="statusPulse" aria-hidden="true"></span>
-            <span id="statusText">Idle</span>
+    <main class="page">
+      <section class="hero-panel" aria-live="polite">
+        <div class="hero-status">
+          <div class="status-badge" id="statusBadge" data-state="idle">
+            <span class="status-ring" id="statusPulse" aria-hidden="true"></span>
+            <span class="status-copy">
+              <span class="status-label">Current status</span>
+              <span class="status-value" id="statusText">Idle</span>
+            </span>
+          </div>
+          <div class="hero-metric">
+            <span class="metric-label">Uptime</span>
+            <span class="metric-value" id="uptime">100.0%</span>
           </div>
         </div>
-        <div class="stat">
-          <div class="stat-label">Checks</div>
-          <div class="stat-value stat-value-neutral" id="totalPings">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Passed</div>
-          <div class="stat-value stat-value-success" id="successCount">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Failed</div>
-          <div class="stat-value stat-value-danger" id="failureCount">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Uptime</div>
-          <div class="stat-value stat-value-neutral" id="uptime">100.0%</div>
-        </div>
-      </div>
 
-      <div class="chart-wrap">
-        <canvas id="pingChart" aria-label="Reachability history chart"></canvas>
-      </div>
-    </section>
+        <div class="metric-row">
+          <div class="metric-chip">
+            <span class="metric-chip-label">Checks</span>
+            <span class="metric-chip-value" id="totalPings">0</span>
+          </div>
+          <div class="metric-chip metric-chip-success">
+            <span class="metric-chip-label">Passed</span>
+            <span class="metric-chip-value" id="successCount">0</span>
+          </div>
+          <div class="metric-chip metric-chip-danger">
+            <span class="metric-chip-label">Failed</span>
+            <span class="metric-chip-value" id="failureCount">0</span>
+          </div>
+        </div>
+      </section>
 
-    <section class="card" aria-labelledby="log-title">
-      <h2 class="card-title" id="log-title">Activity log</h2>
-      <div class="log-panel" id="logContainer">
-        <p class="log-empty">No activity yet. Start monitoring to see checks here.</p>
+      <section class="panel">
+        <form class="control-bar" id="monitorForm" onsubmit="return false;">
+          <div class="url-field">
+            <label class="sr-only" for="urlInput">Website URL</label>
+            <span class="url-prefix" aria-hidden="true">URL</span>
+            <input
+              id="urlInput"
+              name="url"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              placeholder="https://one.one.one.one/"
+              required
+            >
+          </div>
+
+          <div class="interval-field">
+            <label for="intervalInput">Every</label>
+            <input
+              id="intervalInput"
+              name="interval"
+              type="number"
+              min="1"
+              max="300"
+              step="1"
+              value="5"
+              required
+            >
+            <span>sec</span>
+          </div>
+
+          <div class="control-actions">
+            <button class="btn btn-primary" id="startBtn" type="button" aria-pressed="false">
+              Start
+            </button>
+            <button class="btn btn-ghost" id="resetBtn" type="button">
+              Reset
+            </button>
+          </div>
+        </form>
+        <p class="field-error" id="urlError" aria-live="polite"></p>
+        <p class="panel-note">Checks run in your browser. Cross-origin restrictions may hide HTTP status codes for some sites.</p>
+      </section>
+
+      <div class="dashboard-grid">
+        <section class="panel panel-chart" aria-labelledby="chart-title">
+          <div class="panel-head">
+            <h2 id="chart-title">Timeline</h2>
+            <span class="panel-meta">Last 50 checks</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="pingChart" aria-label="Reachability history chart"></canvas>
+          </div>
+        </section>
+
+        <section class="panel panel-log" aria-labelledby="log-title">
+          <div class="panel-head">
+            <h2 id="log-title">Activity</h2>
+            <span class="panel-meta">Newest first</span>
+          </div>
+          <div class="log-panel" id="logContainer">
+            <p class="log-empty">No checks yet. Hit Start to begin monitoring.</p>
+          </div>
+        </section>
       </div>
-    </section>
+    </main>
 
     <footer class="site-footer">
-      <p>
-        Open source from
-        <a href="https://github.com/invesh-io/spandan" rel="noopener noreferrer">invesh-io/spandan</a>
-      </p>
+      <p>Open source · <a href="https://github.com/invesh-io/spandan" rel="noopener noreferrer">invesh-io/spandan</a></p>
     </footer>
-  </main>
+  </div>
 
   <script type="module" src="js/app.js"></script>
 </body>
