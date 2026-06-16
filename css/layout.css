@@ -128,8 +128,10 @@
 }
 
 .ecg-wrap {
-  flex: 1;
   position: relative;
+  flex-shrink: 0;
+  height: 10rem;
+  max-height: 12rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: rgba(0, 0, 0, 0.25);
@@ -138,9 +140,10 @@
 }
 
 .ecg-wrap canvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  min-height: 8.5rem;
 }
 
 .ecg-grid {
@@ -592,6 +595,11 @@
     border-right: 0;
     border-bottom: 1px solid var(--glass-border);
     min-height: auto;
+  }
+
+  .ecg-wrap {
+    height: 8.5rem;
+    max-height: 10rem;
   }
 
   .command-row {

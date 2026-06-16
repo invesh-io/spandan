@@ -12,7 +12,18 @@ export class EcgAnimator {
     this.state = "idle";
     this.phase = 0;
     this.rafId = null;
-    this.resizeObserver = new ResizeObserver(() => this.resize());
+    this.resizeFrame = null;
+    this.lastWidth = 0;
+    this.lastHeight = 0;
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.resizeFrame) {
+        return;
+      }
+      this.resizeFrame = window.requestAnimationFrame(() => {
+        this.resizeFrame = null;
+        this.resize();
+      });
+    });
     this.resizeObserver.observe(canvas.parentElement);
     this.resize();
     this.draw();
@@ -24,11 +35,21 @@ export class EcgAnimator {
 
   resize() {
     const rect = this.canvas.parentElement.getBoundingClientRect();
+    const width = Math.round(rect.width);
+    const height = Math.round(rect.height);
+    if (width < 1 || height < 1) {
+      return;
+    }
+    if (width === this.lastWidth && height === this.lastHeight) {
+      return;
+    }
+    this.lastWidth = width;
+    this.lastHeight = height;
     const ratio = window.devicePixelRatio || 1;
-    this.canvas.width = rect.width * ratio;
-    this.canvas.height = rect.height * ratio;
-    this.canvas.style.width = `${rect.width}px`;
-    this.canvas.style.height = `${rect.height}px`;
+    this.canvas.width = width * ratio;
+    this.canvas.height = height * ratio;
+    this.canvas.style.width = `${width}px`;
+    this.canvas.style.height = `${height}px`;
     this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   }
 
@@ -100,6 +121,9 @@ export class EcgAnimator {
   destroy() {
     if (this.rafId) {
       window.cancelAnimationFrame(this.rafId);
+    }
+    if (this.resizeFrame) {
+      window.cancelAnimationFrame(this.resizeFrame);
     }
     this.resizeObserver.disconnect();
   }
